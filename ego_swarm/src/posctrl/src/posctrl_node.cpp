@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh_;
 
     state_sub_ = nh_.subscribe("/mavros/state", 10, stateCallback);
-    odom_sub_ = nh_.subscribe("/mavros/local_position/odom", 10, odomCallback);
+    odom_sub_ = nh_.subscribe("/Odometry_imu", 10, odomCallback);
     setpoint_sub_ = nh_.subscribe("/setpoints_cmd", 10, setpointCallback);
     // setpoint_sub_ = nh_.subscribe("/planning/pos_cmd", 10, setpointCallback);
     setpoint_pub_ = nh_.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local", 10);
