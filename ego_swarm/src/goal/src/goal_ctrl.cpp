@@ -325,7 +325,7 @@ int main(int argc, char **argv)
     mission_reset_pub = nh.advertise<std_msgs::Bool>("/mission_reset_signal", 1);
     goal_state_pub = nh.advertise<std_msgs::Int32>("/goal_state", 1);
 
-    odom_sub = nh.subscribe<nav_msgs::Odometry>("/mavros/local_position/odom", 1, odomCallback);
+    odom_sub = nh.subscribe<nav_msgs::Odometry>("/Odometry_imu", 1, odomCallback);
     rc_sub = nh.subscribe<mavros_msgs::RCIn>("/mavros/rc/in", 1, rcInCallback);
     replan_state_sub = nh.subscribe<std_msgs::Bool>("/replan_state_flag", 1, replanCallback);
     occurred_error_sub = nh.subscribe<std_msgs::Bool>("/occurred_error_flag", 1, errorCallback);
