@@ -6,6 +6,9 @@ roslaunch livox_ros_driver2 msg_MID360.launch & sleep 2;
 source ~/cam_ws/devel/setup.bash
 roslaunch usb_cam usb_cam.launch & sleep 1;
 
+source ~/rocon_ws/devel/setup.bash
+roslaunch rocon_rtsp_camera_relay rtsp_camera_relay.launch & sleep 1;
+
 source ~/fast_lio_rofly/devel/setup.bash
 roslaunch fast_lio mapping_mid360.launch & sleep 2;
 roslaunch odom_frequency_conversion odom_frequency_conversion.launch & sleep 2;
