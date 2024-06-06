@@ -1,0 +1,13 @@
+<launch>
+     <node type="goal_rc_node" name="goal_rc_node" pkg="goal_rc" output="screen">
+          <param name="max_step" type="double" value="3.0"/>
+          <param name="deadband" type="int" value="100"/>
+          <param name="goal_duration" type="double" value="2.0"/>
+          <param name="low_vel_limit" type="double" value="0.5"/>
+          <param name="mid_vel_limit" type="double" value="1.5"/>
+          <param name="high_vel_limit" type="double" value="3.0"/>
+          <param name="low_acc_limit" type="double" value="1.0"/>
+          <param name="mid_acc_limit" type="double" value="3.0"/>
+          <param name="high_acc_limit" type="double" value="6.0"/>
+     </node>
+</launch>

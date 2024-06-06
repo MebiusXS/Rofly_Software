@@ -1,0 +1,21 @@
+<launch>
+
+	<node pkg="system_monitor" type="system_monitor_node" name="system_monitor_node" >
+		<param name="text_width"	type="int"		value="300"/>
+		<param name="text_height"	type="int"		value="400"/>
+		<param name="text_left"		type="int"		value="1580" />
+		<param name="text_top"		type="int"		value="650" />
+		<param name="text_size"		type="int"		value="24" />
+		<param name="line_width"	type="int"		value="4" />
+		<param name="fg_color_r"	type="double"	value="25.0"/>
+		<param name="text_font"		type="string"	value="宋体" />
+		<param name="fg_color_g"	type="double"	value="255.0"/>
+		<param name="fg_color_b"	type="double"	value="240.0"/>
+		<param name="fg_color_a"	type="double"	value="1.0"/>
+		<param name="bg_color_r"	type="double"	value="0.0"/>
+		<param name="bg_color_g"	type="double"	value="0.0"/>
+		<param name="bg_color_b"	type="double"	value="0.0"/>
+		<param name="bg_color_a"	type="double"	value="0.2"/>
+	</node>
+
+</launch>

@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/pf/iProject/fastlio_visualization/devel/lib/python3/dist-packages",
+        "/home/pf/ws_livox/devel/lib/python3/dist-packages",
+        "/home/pf/d435i/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/pf/iProject/fastlio_visualization/devel/lib/python3/dist-packages",
+        "/home/pf/ws_livox/devel/lib/python3/dist-packages",
+        "/home/pf/d435i/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
+}

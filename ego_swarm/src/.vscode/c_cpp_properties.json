@@ -1,0 +1,34 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/dji/zzzx/ego_planner_swarm/devel/include/**",
+                "/opt/ros/kinetic/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/planner/bspline_opt/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/real_flight_modules/VINS-Fusion/camera_models/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/real_flight_modules/djiros/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/planner/drone_detect/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/planner/plan_manage/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/Utils/multi_map_server/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/planner/path_searching/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/planner/plan_env/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/Utils/pose_utils/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/Utils/quadrotor_msgs/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/real_flight_modules/realsense2_camera/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/planner/traj_utils/include/**",
+                "/home/dji/zzzx/ego_planner_swarm/src/Utils/uav_utils/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

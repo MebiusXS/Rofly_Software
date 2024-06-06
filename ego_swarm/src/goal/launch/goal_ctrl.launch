@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+     <node type="goal_ctrl" name="goal_ctrl" pkg="goal" output="screen"/>
+</launch>
