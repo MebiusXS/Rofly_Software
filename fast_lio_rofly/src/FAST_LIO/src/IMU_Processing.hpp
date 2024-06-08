@@ -24,6 +24,8 @@
 #include <geometry_msgs/Vector3.h>
 #include "use-ikfom.hpp"
 
+#include <boost/thread.hpp>
+
 /// *************Preconfiguration
 
 #define MAX_INI_COUNT (10)
@@ -50,6 +52,12 @@ class ImuProcess
   void set_acc_bias_cov(const V3D &b_a);
   Eigen::Matrix<double, 12, 12> Q;
   void Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI::Ptr pcl_un_);
+
+  // Changed by cxw
+  void Process_Imu_Real(const sensor_msgs::Imu &RealImu, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state);
+  nav_msgs::Odometry get_odomFromImu();
+  bool receive_imu = false;
+  bool receive_lidar = false;
 
   ofstream fout_imu;
   V3D cov_acc;
@@ -80,6 +88,14 @@ class ImuProcess
   int    init_iter_num = 1;
   bool   b_first_frame_ = true;
   bool   imu_need_init_ = true;
+
+  // Changed by cxw
+  void get_odomFromImu(const state_ikfom &imu_state);
+  nav_msgs::Odometry odom_from_imu;
+  double dt_real;
+  Eigen::Matrix<double, 12, 12> Q_real;
+  esekfom::esekf<state_ikfom, 12, input_ikfom> kf_real;
+  input_ikfom in_real;
 };
 
 ImuProcess::ImuProcess()
@@ -153,6 +169,37 @@ void ImuProcess::set_acc_bias_cov(const V3D &b_a)
 {
   cov_bias_acc = b_a;
 }
+
+// Changed by cxw
+bool flag_ = true;
+void ImuProcess::get_odomFromImu(const state_ikfom &imu_state)
+{
+  odom_from_imu.header.stamp = ros::Time::now();
+  odom_from_imu.header.frame_id = "camera_init";
+  odom_from_imu.pose.pose.position.x = imu_state.pos(0);
+  odom_from_imu.pose.pose.position.y = imu_state.pos(1);
+  odom_from_imu.pose.pose.position.z = imu_state.pos(2);
+  Eigen::Quaterniond q(imu_state.rot);
+  odom_from_imu.pose.pose.orientation.x = q.x();
+  odom_from_imu.pose.pose.orientation.y = q.y();
+  odom_from_imu.pose.pose.orientation.z = q.z();
+  odom_from_imu.pose.pose.orientation.w = q.w();
+  odom_from_imu.twist.twist.linear.x = imu_state.vel(0);
+  odom_from_imu.twist.twist.linear.y = imu_state.vel(1);
+  odom_from_imu.twist.twist.linear.z = imu_state.vel(2);
+
+  if (flag_)
+  {
+      std::cout << "Hello from main thread " << boost::this_thread::get_id() << std::endl;
+      flag_ = false;
+  }
+}
+
+nav_msgs::Odometry ImuProcess::get_odomFromImu()
+{
+  return odom_from_imu;
+}
+
 
 void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, int &N)
 {
@@ -275,6 +322,11 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
     Q.block<3, 3>(9, 9).diagonal() = cov_bias_acc;
     kf_state.predict(dt, Q, in);
 
+    // Changed by cxw
+    in_real = in;
+    dt_real = dt;
+    Q_real = Q;
+
     /* save the poses at each IMU measurements */
     imu_state = kf_state.get_x();
     angvel_last = angvel_avr - imu_state.bg;
@@ -374,4 +426,24 @@ void ImuProcess::Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 
   t3 = omp_get_wtime();
   
   // cout<<"[ IMU Process ]: Time: "<<t3 - t1<<endl;
+}
+
+void ImuProcess::Process_Imu_Real(const sensor_msgs::Imu &RealImu, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state)
+{
+  V3D angvel_avr, acc_avr;
+  angvel_avr<<RealImu.angular_velocity.x,
+              RealImu.angular_velocity.y,
+              RealImu.angular_velocity.z;
+  acc_avr   <<RealImu.linear_acceleration.x,
+              RealImu.linear_acceleration.y,
+              RealImu.linear_acceleration.z;
+  acc_avr   = acc_avr * G_m_s2 / mean_acc.norm();
+
+  input_ikfom in;
+  in.gyro = angvel_avr;
+  in.acc = acc_avr;
+
+  kf_state.predict(dt_real, Q_real, in);
+  state_ikfom imu_state = kf_state.get_x();
+  get_odomFromImu(imu_state);
 }

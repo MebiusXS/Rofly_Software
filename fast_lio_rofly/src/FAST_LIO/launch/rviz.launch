@@ -1,4 +1,3 @@
 <launch>
-  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" required="true" /> -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find fast_lio)/rviz_cfg/select_goal.rviz" required="true" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" required="true" />
 </launch>

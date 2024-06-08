@@ -62,7 +62,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   eigen_conversions
   cv_bridge
-  dynamic_reconfigure
+
 )
 
 find_package(Eigen3 REQUIRED)
@@ -71,10 +71,12 @@ find_package(PCL 1.8 REQUIRED)
 message(Eigen: ${EIGEN3_INCLUDE_DIR})
 
 include_directories(
+  ${PROJECT_SOURCE_DIR}/include
 	${catkin_INCLUDE_DIRS} 
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
   include)
 
 add_message_files(
@@ -87,26 +89,44 @@ generate_messages(
  geometry_msgs
 )
 
-generate_dynamic_reconfigure_options(
-        cfg/debug_parameter.cfg
-)
-
 catkin_package(
   CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs message_runtime
   DEPENDS EIGEN3 PCL
   INCLUDE_DIRS
 )
 
+# add_library( plan_env 
+#     src/grid_map.cpp 
+#     src/raycast.cpp
+#     src/obj_predictor.cpp 
+#     )
+# target_link_libraries( plan_env
+#     ${catkin_LIBRARIES} 
+#     ${PCL_LIBRARIES}
+#     ${OpenCV_LIBS}
+#     ) 
+
+#     add_executable(obj_generator
+#     src/obj_generator.cpp 
+# )
+
+# add_executable(tobe_grid
+#     src/tobe_grid.cpp 
+#     src/grid_map.cpp 
+#     src/raycast.cpp
+# )
+# target_link_libraries(obj_generator 
+#     ${catkin_LIBRARIES}
+#     )
+# target_link_libraries(tobe_grid
+#     ${catkin_LIBRARIES}
+#     ${PCL_LIBRARIES}
+#     ${OpenCV_LIBS}
+#     )
 add_executable(fastlio_mapping src/laserMapping.cpp include/ikd-Tree/ikd_Tree.cpp src/preprocess.cpp)
-target_link_libraries(fastlio_mapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${PYTHON_LIBRARIES})
+target_link_libraries(fastlio_mapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${PYTHON_LIBRARIES}  ${OpenCV_LIBS})
 target_include_directories(fastlio_mapping PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 add_executable(pointCloud_clipping src/pointCloud_clipping.cpp)
 target_link_libraries(pointCloud_clipping ${catkin_LIBRARIES} ${PCL_LIBRARIES}  ${OpenCV_LIBS})
 # target_link_directories(pointCloud_clipping ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-
-
-add_executable(Point_cloud_visualization src/Point_cloud_visualization.cpp)
-add_dependencies(Point_cloud_visualization ${${PROJECT_NAME}_EXPORTED_TARGETD} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(Point_cloud_visualization ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${PYTHON_LIBRARIES})
-target_include_directories(Point_cloud_visualization PRIVATE ${PYTHON_INCLUDE_DIRS})
