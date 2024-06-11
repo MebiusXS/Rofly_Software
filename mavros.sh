@@ -1,6 +1,6 @@
 #!/bin/bash
 source /opt/ros/noetic/setup.bash
-sudo chmod 777 /dev/ttyTHS0
+sudo chmod 777 /dev/tty*
 roslaunch mavros apm.launch & sleep 1;
 # rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1
 # rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1
