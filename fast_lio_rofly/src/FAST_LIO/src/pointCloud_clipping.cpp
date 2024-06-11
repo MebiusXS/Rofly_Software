@@ -15,7 +15,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include "nav_msgs/Odometry.h"
 #include "tf/transform_listener.h"
-
+#include <visualization_msgs/Marker.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/filters/passthrough.h>
@@ -49,11 +49,14 @@ double y = 0;
 double z = 0;
 
 Eigen::Vector3d euler(0, 0, 0);
+Eigen::Vector3d marker_pose(0,0,0);
 
 ros::Subscriber sub_point_cloud_;
 ros::Subscriber sub_odom_boxMapping;
 ros::Subscriber sub_ladar_map_feats;
-ros::Publisher odom_pub;
+ros::Publisher  odom_pub;
+ros::Subscriber sub_marker;
+
 // 将box的点云发出来
 ros::Publisher pub_filtered_points_;
 ros::Publisher pub_box_image;
@@ -286,6 +289,14 @@ void pub_image(ros::Publisher &pub_box_image) {
             cv::circle(image, cv::Point(v, u), lidar_obstacle_radius, cv::Scalar(0, 0, 255), cv::FILLED);
         }
     }
+
+    // Marker pose:
+    int marker_u = static_cast<int>((marker_pose[0] - x_0) * scale_x);
+    int marker_v = static_cast<int>((marker_pose[1] - y_0) * scale_y);
+    cv::Point2f marker_uv_origin(marker_u, marker_v);
+    point_yaw(-yaw_body, center, marker_uv_origin);
+    cv::circle(image, cv::Point(marker_uv_origin.y, marker_uv_origin.x), 12.0, cv::Scalar(0, 255, 0), cv::FILLED);
+    
     if (!isRotationLidarPoint_inbox) {
         // 将弧度制转换为角度制
         cv::Point2f point1(IMG_HEIGHT * 0.5, IMG_WIDTH * 0.5);
@@ -318,7 +329,12 @@ void pub_image(ros::Publisher &pub_box_image) {
     }
     pub_box_image.publish(msg);
 }
-
+void call_get_marker(const visualization_msgs::Marker::ConstPtr& msg){
+    marker_pose[0] = msg->pose.position.x;
+    marker_pose[1] = msg->pose.position.y;
+    marker_pose[2] = msg->pose.position.z;
+    ROS_WARN("marker_pose = %.2f, %.2f, %.2f",marker_pose[0], marker_pose[1], marker_pose[2]);
+}
 void call_get_odom(const nav_msgs::Odometry::ConstPtr &msg) {
     x = msg->pose.pose.position.x;
     y = msg->pose.pose.position.y;
@@ -406,6 +422,7 @@ int main(int argc, char **argv) {
     sub_ladar_map_feats = nh.subscribe("/Laser_ACCmap", 100000, &call_point_box_clipping);
     // sub_ladar_map_feats = nh.subscribe("/cloud_registered", 100000, &call_point_box_clipping);
     sub_odom_boxMapping = nh.subscribe("/Odometry", 100000, &call_get_odom);
+    sub_marker = nh.subscribe("/preview_goal_marker", 10, &call_get_marker);
     odom_pub = nh.advertise<nav_msgs::Odometry>("/new_odom", 100000);
 
     pub_filtered_points_ = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points", 100000);

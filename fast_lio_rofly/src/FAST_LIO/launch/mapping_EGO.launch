@@ -1,0 +1,9 @@
+<launch>
+       <param name="leaf_size" type="double" value="0.1"/>
+       <param name="leaf_size_filter_accMap" type="double" value="0.1"/>
+       <param name="box_x_length" type="double" value="40.0"/>
+       <param name="box_y_length" type="double" value="40.0"/>
+       <param name="box_z_length" type="double" value="20.0"/>
+     <node pkg="fast_lio" type="MapEgo" name="MapEgo" output="screen" />
+
+</launch>

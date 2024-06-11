@@ -23,18 +23,18 @@ sleep 3
 xdotool key Alt+Left
 sleep 1
 xdotool key Shift+Ctrl+O
-sleep 1
-xdotool type $pcviz_sh
-xdotool key Return
+# sleep 1
+# xdotool type $pcviz_sh
+# xdotool key Return
 sleep 1
 
 # keyboard
 xdotool key Alt+Right
 sleep 1
 xdotool key Shift+Ctrl+O
-sleep 1
-xdotool type $kcon_sh
-xdotool key Return
+# sleep 1
+# xdotool type $kcon_sh
+# xdotool key Return
 sleep 1
 
 # goal_ctrl ego
