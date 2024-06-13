@@ -23,6 +23,7 @@
         <param name="grid_map/local_update_range_x"  value="8.5" /> 
         <param name="grid_map/local_update_range_y"  value="8.5" /> 
         <param name="grid_map/local_update_range_z"  value="3.0" /> 
+        <param name="grid_map/half"  value="0.5" /> 
         
         <!-- 0.2 -->
         <param name="grid_map/obstacles_inflation"     value="0.28" /> 

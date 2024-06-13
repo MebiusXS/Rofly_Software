@@ -52,6 +52,8 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_.param("grid_map/ground_height", mp_.ground_height_, 1.0);   //地图的z轴零点所在位置，
   node_.param("grid_map/odom_depth_timeout", mp_.odom_depth_timeout_, 1.0);
   node_.param("grid_map/self_id", self_id, 0);
+  node_.param("grid_map/half", mp_.half, 0.5);
+  
 
   if( mp_.virtual_ceil_height_ - mp_.ground_height_ > z_size)
   {
@@ -217,7 +219,7 @@ void GridMap::raycastProcess(const pcl::PointCloud<pcl::PointXYZ> &cloud)
   double max_z = mp_.map_min_boundary_(2);
 
   RayCaster raycaster;
-  Eigen::Vector3d half = Eigen::Vector3d(0.5, 0.5, 0.5);
+  Eigen::Vector3d raycast_half = Eigen::Vector3d(mp_.half, mp_.half, mp_.half);
   Eigen::Vector3d ray_pt, pt_w;
 
   for (const auto&pt:cloud)
@@ -276,7 +278,7 @@ void GridMap::raycastProcess(const pcl::PointCloud<pcl::PointXYZ> &cloud)
 
     while (raycaster.step(ray_pt))
     {
-      Eigen::Vector3d tmp = (ray_pt + half) * mp_.resolution_;
+      Eigen::Vector3d tmp = (ray_pt + raycast_half) * mp_.resolution_;
       length = (tmp - md_.camera_pos_).norm();
 
       // if (length < mp_.min_ray_length_) break;
@@ -816,8 +818,8 @@ void GridMap::publishMap()
 
         Eigen::Vector3d pos;
         indexToPos(Eigen::Vector3i(x, y, z), pos);
-        if (pos(2) > mp_.visualization_truncate_height_)
-          continue;
+        // if (pos(2) > mp_.visualization_truncate_height_)
+        //   continue;
 
         pt.x = pos(0);
         pt.y = pos(1);
@@ -866,8 +868,8 @@ void GridMap::publishMapInflate(bool all_info)
 
         Eigen::Vector3d pos;
         indexToPos(Eigen::Vector3i(x, y, z), pos);
-        if (pos(2) > mp_.visualization_truncate_height_)
-          continue;
+        // if (pos(2) > mp_.visualization_truncate_height_)
+        //   continue;
 
         pt.x = pos(0);
         pt.y = pos(1);

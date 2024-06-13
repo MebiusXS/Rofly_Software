@@ -55,7 +55,7 @@ struct MappingParameters {
   Eigen::Vector3d local_update_range_;
   Eigen::Vector3d send_update_range_;
 
-  double resolution_, resolution_inv_;
+  double resolution_, resolution_inv_, half;
   double obstacles_inflation_, obstacles_inflation_z_;
   string frame_id_;
   int pose_type_;
