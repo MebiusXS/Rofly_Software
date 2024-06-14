@@ -24,6 +24,7 @@
 #include <geometry_msgs/Vector3.h>
 #include "use-ikfom.hpp"
 
+// Changed by cxw
 #include <boost/thread.hpp>
 
 /// *************Preconfiguration
@@ -171,7 +172,6 @@ void ImuProcess::set_acc_bias_cov(const V3D &b_a)
 }
 
 // Changed by cxw
-bool flag_ = true;
 void ImuProcess::get_odomFromImu(const state_ikfom &imu_state)
 {
   odom_from_imu.header.stamp = ros::Time::now();
@@ -187,12 +187,6 @@ void ImuProcess::get_odomFromImu(const state_ikfom &imu_state)
   odom_from_imu.twist.twist.linear.x = imu_state.vel(0);
   odom_from_imu.twist.twist.linear.y = imu_state.vel(1);
   odom_from_imu.twist.twist.linear.z = imu_state.vel(2);
-
-  if (flag_)
-  {
-      std::cout << "Hello from main thread " << boost::this_thread::get_id() << std::endl;
-      flag_ = false;
-  }
 }
 
 nav_msgs::Odometry ImuProcess::get_odomFromImu()
@@ -428,6 +422,7 @@ void ImuProcess::Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 
   // cout<<"[ IMU Process ]: Time: "<<t3 - t1<<endl;
 }
 
+// Changed by cxw
 void ImuProcess::Process_Imu_Real(const sensor_msgs::Imu &RealImu, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state)
 {
   V3D angvel_avr, acc_avr;

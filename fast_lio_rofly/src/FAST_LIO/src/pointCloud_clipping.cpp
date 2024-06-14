@@ -333,7 +333,7 @@ void call_get_marker(const visualization_msgs::Marker::ConstPtr& msg){
     marker_pose[0] = msg->pose.position.x;
     marker_pose[1] = msg->pose.position.y;
     marker_pose[2] = msg->pose.position.z;
-    ROS_WARN("marker_pose = %.2f, %.2f, %.2f",marker_pose[0], marker_pose[1], marker_pose[2]);
+    // ROS_WARN("marker_pose = %.2f, %.2f, %.2f",marker_pose[0], marker_pose[1], marker_pose[2]);
 }
 void call_get_odom(const nav_msgs::Odometry::ConstPtr &msg) {
     x = msg->pose.pose.position.x;
@@ -397,6 +397,7 @@ void pub_window_box(ros::Publisher &window_pub) {
     if (window_buffer.size() >= 50) {
         sensor_msgs::PointCloud2 accumulated_msg;
         pcl::toROSMsg(*box_window_accWindow, accumulated_msg);
+        
         if (!isDenseBox) {
             accumulated_msg.header = pub_point_accMap.header;
         } else {

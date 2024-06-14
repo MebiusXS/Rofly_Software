@@ -56,11 +56,11 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <livox_ros_driver/CustomMsg.h>
 #include "preprocess.h"
 #include <ikd-Tree/ikd_Tree.h>
 
+// Changed by cxw
 #include <boost/thread.hpp>
 #include <ros/callback_queue.h>
 
@@ -75,6 +75,9 @@ double T1[MAXN], s_plot[MAXN], s_plot2[MAXN], s_plot3[MAXN], s_plot4[MAXN], s_pl
 double match_time = 0, solve_time = 0, solve_const_H_time = 0;
 int    kdtree_size_st = 0, kdtree_size_end = 0, add_point_size = 0, kdtree_delete_counter = 0;
 bool   runtime_pos_log = false, pcd_save_en = false, time_sync_en = false, extrinsic_est_en = true, path_en = true;
+// changed by cxw
+bool   is_imu_rotation = false;
+vector<double> imu_extrinR(9, 0.0);
 /**************************/
 
 float res_last[100000] = {0.0};
@@ -146,7 +149,7 @@ shared_ptr<ImuProcess> p_imu(new ImuProcess());
 // Changed by cxw
 bool kf_flag = false;
 sensor_msgs::Imu RealImu;
-ros::Publisher pubOdomFromImu, pubVisionPose, vis_pub;
+ros::Publisher pubOdomFromImu;
 esekfom::esekf<state_ikfom, 12, input_ikfom> kf_real;
 ros::Time sub_imu_time;
 ros::Time sub_lidar_time;
@@ -357,6 +360,28 @@ void imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in)
     // Changed by cxw
     RealImu.angular_velocity = msg_in->angular_velocity;
     RealImu.linear_acceleration = msg_in->linear_acceleration;
+
+    if (is_imu_rotation)
+    {
+        msg->linear_acceleration.x = imu_extrinR[0] * msg->linear_acceleration.x + 
+                                     imu_extrinR[1] * msg->linear_acceleration.y +
+                                     imu_extrinR[2] * msg->linear_acceleration.z;
+        msg->linear_acceleration.y = imu_extrinR[3] * msg->linear_acceleration.x + 
+                                     imu_extrinR[4] * msg->linear_acceleration.y +
+                                     imu_extrinR[5] * msg->linear_acceleration.z;
+        msg->linear_acceleration.z = imu_extrinR[6] * msg->linear_acceleration.x + 
+                                     imu_extrinR[7] * msg->linear_acceleration.y +
+                                     imu_extrinR[8] * msg->linear_acceleration.z;
+        RealImu.linear_acceleration.x = imu_extrinR[0] * RealImu.linear_acceleration.x + 
+                                        imu_extrinR[1] * RealImu.linear_acceleration.y +
+                                        imu_extrinR[2] * RealImu.linear_acceleration.z;
+        RealImu.linear_acceleration.y = imu_extrinR[3] * RealImu.linear_acceleration.x + 
+                                        imu_extrinR[4] * RealImu.linear_acceleration.y +
+                                        imu_extrinR[5] * RealImu.linear_acceleration.z;
+        RealImu.linear_acceleration.z = imu_extrinR[6] * RealImu.linear_acceleration.x + 
+                                        imu_extrinR[7] * RealImu.linear_acceleration.y +
+                                        imu_extrinR[8] * RealImu.linear_acceleration.z;
+    }
 
     msg->header.stamp = ros::Time().fromSec(msg_in->header.stamp.toSec() - time_diff_lidar_to_imu);
     if (abs(timediff_lidar_wrt_imu) > 0.1 && time_sync_en)
@@ -635,22 +660,6 @@ void publish_odometry(const ros::Publisher & pubOdomAftMapped)
     q.setZ(odomAftMapped.pose.pose.orientation.z);
     transform.setRotation( q );
     br.sendTransform( tf::StampedTransform( transform, odomAftMapped.header.stamp, "camera_init", "body" ) );
-
-    // modified by czk
-    static tf::TransformBroadcaster odom_broadcaster;
-    geometry_msgs::TransformStamped odom_trans;
-
-    odom_trans.header.stamp = ros::Time::now();
-    odom_trans.header.frame_id = "camera_init";
-    odom_trans.child_frame_id = "base_link";
-
-    odom_trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
-    odom_trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
-    odom_trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
-    odom_trans.transform.rotation = odomAftMapped.pose.pose.orientation; 
-
-    odom_broadcaster.sendTransform(odom_trans);
-
 }
 
 void publish_path(const ros::Publisher pubPath)
@@ -787,15 +796,8 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
     solve_time += omp_get_wtime() - solve_start_;
 }
 
-bool flag = true;
 void timer_cbk(const ros::TimerEvent&)
 {
-    if (flag)
-    {
-        std::cout << "Hello from timer thread " << boost::this_thread::get_id() << std::endl;
-        flag = false;
-    }
-
     ros::Time cur_time = ros::Time::now();
     if ((cur_time - sub_imu_time > ros::Duration(0.05)) || (cur_time - sub_lidar_time > ros::Duration(0.5)))
         return;
@@ -824,8 +826,6 @@ void timer_cbk(const ros::TimerEvent&)
             filter_odom.twist.twist.linear.y += odom_vec[i].twist.twist.linear.y;
             filter_odom.twist.twist.linear.z += odom_vec[i].twist.twist.linear.z;
         }
-        filter_odom.header.frame_id = "world";
-        filter_odom.header.stamp = ros::Time::now();
         filter_odom.pose.pose.position.x /= odom_vec.size();
         filter_odom.pose.pose.position.y /= odom_vec.size();
         filter_odom.pose.pose.position.z /= odom_vec.size();
@@ -838,41 +838,6 @@ void timer_cbk(const ros::TimerEvent&)
         filter_odom.twist.twist.linear.z /= odom_vec.size();
 
         pubOdomFromImu.publish(filter_odom);
-
-        geometry_msgs::PoseStamped VisionPose;
-        VisionPose.header.stamp = ros::Time::now();
-        VisionPose.pose = filter_odom.pose.pose;
-        pubVisionPose.publish(VisionPose);
-
-        // Modified by czk
-        tf::Quaternion quat;
-        tf::quaternionMsgToTF(VisionPose.pose.orientation, quat);
-        
-        double roll, pitch, yaw;
-        tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-
-        visualization_msgs::Marker marker;
-        marker.header.frame_id = "camera_init";
-        marker.header.stamp = ros::Time();
-        marker.ns = "my_namespace";
-        marker.id = 0;
-        marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-        marker.action = visualization_msgs::Marker::ADD;
-        marker.pose.position.x = VisionPose.pose.position.x - 0.175;
-        marker.pose.position.y = VisionPose.pose.position.y - 0.185;
-        marker.pose.position.z = VisionPose.pose.position.z;
-        // marker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll + 1.5707963, pitch, yaw + 1.5707963);
-        marker.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(pitch + 1.5707963, -roll, yaw + 1.5707963);
-        marker.scale.x = 0.001;
-        marker.scale.y = 0.001;
-        marker.scale.z = 0.001;
-        marker.color.a = 1.0; // Don't forget to set the alpha!
-        marker.color.r = 255.0;
-        marker.color.g = 255.0;
-        marker.color.b = 255.0;
-        //only if using a MESH_RESOURCE marker type:
-        marker.mesh_resource = "package://fast_lio/meshes/1.STL";
-        vis_pub.publish(marker);
     }
 }
 
@@ -902,6 +867,9 @@ int main(int argc, char** argv)
     nh.param<double>("mapping/b_gyr_cov",b_gyr_cov,0.0001);
     nh.param<double>("mapping/b_acc_cov",b_acc_cov,0.0001);
     nh.param<double>("preprocess/blind", p_pre->blind, 0.01);
+    nh.param<double>("preprocess/box_x", p_pre->box_x, 0.01);
+    nh.param<double>("preprocess/box_y", p_pre->box_y, 0.01);
+    nh.param<double>("preprocess/box_z", p_pre->box_z, 0.01);
     nh.param<int>("preprocess/lidar_type", p_pre->lidar_type, AVIA);
     nh.param<int>("preprocess/scan_line", p_pre->N_SCANS, 16);
     nh.param<int>("preprocess/timestamp_unit", p_pre->time_unit, US);
@@ -915,7 +883,11 @@ int main(int argc, char** argv)
     nh.param<vector<double>>("mapping/extrinsic_T", extrinT, vector<double>());
     nh.param<vector<double>>("mapping/extrinsic_R", extrinR, vector<double>());
     cout<<"p_pre->lidar_type "<<p_pre->lidar_type<<endl;
-    
+
+    // changed by cxw
+    nh.param<bool>("imu_common/is_imu_rotation", is_imu_rotation, false);
+    nh.param<vector<double>>("imu_common/extrinsic_R", imu_extrinR, vector<double>());
+
     path.header.stamp    = ros::Time::now();
     path.header.frame_id ="camera_init";
 
@@ -985,11 +957,6 @@ int main(int argc, char** argv)
     // Changed by cxw
     pubOdomFromImu = nh.advertise<nav_msgs::Odometry> ("/Odometry_imu", 100000);
     ros::Timer timer = nh.createTimer(ros::Duration(0.005), timer_cbk);
-
-    // Modified by czk
-    pubVisionPose = nh.advertise<geometry_msgs::PoseStamped> ("/mavros/vision_pose/pose", 100000);
-    vis_pub = nh.advertise<visualization_msgs::Marker> ("/Rofly_marker", 100000);
-
 //------------------------------------------------------------------------------------------------------
     signal(SIGINT, SigHandle);
     ros::Rate rate(5000);
@@ -1076,7 +1043,7 @@ int main(int argc, char** argv)
             fout_pre<<setw(20)<<Measures.lidar_beg_time - first_lidar_time<<" "<<euler_cur.transpose()<<" "<< state_point.pos.transpose()<<" "<<ext_euler.transpose() << " "<<state_point.offset_T_L_I.transpose()<< " " << state_point.vel.transpose() \
             <<" "<<state_point.bg.transpose()<<" "<<state_point.ba.transpose()<<" "<<state_point.grav<< endl;
 
-            if(1) // If you need to see map point, change to "if(1)"
+            if(0) // If you need to see map point, change to "if(1)"
             {
                 PointVector ().swap(ikdtree.PCL_Storage);
                 ikdtree.flatten(ikdtree.Root_Node, ikdtree.PCL_Storage, NOT_RECORD);
@@ -1120,7 +1087,7 @@ int main(int argc, char** argv)
             if (scan_pub_en || pcd_save_en)      publish_frame_world(pubLaserCloudFull);
             if (scan_pub_en && scan_body_pub_en) publish_frame_body(pubLaserCloudFull_body);
             // publish_effect_world(pubLaserCloudEffect);
-            publish_map(pubLaserCloudMap);
+            // publish_map(pubLaserCloudMap);
 
             /*** Debug variables ***/
             if (runtime_pos_log)

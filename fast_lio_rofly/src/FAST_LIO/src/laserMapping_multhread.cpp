@@ -60,6 +60,7 @@
 #include "preprocess.h"
 #include <ikd-Tree/ikd_Tree.h>
 
+// Changed by cxw
 #include <boost/thread.hpp>
 #include <ros/callback_queue.h>
 
@@ -145,8 +146,12 @@ shared_ptr<ImuProcess> p_imu(new ImuProcess());
 // Changed by cxw
 bool kf_flag = false;
 sensor_msgs::Imu RealImu;
-ros::Publisher pubOdomFromImu;
+ros::Publisher pubOdomFromImu, pubVisionOdom;
 esekfom::esekf<state_ikfom, 12, input_ikfom> kf_real;
+ros::Time sub_imu_time;
+ros::Time sub_lidar_time;
+std::vector<nav_msgs::Odometry> odom_vec;
+int filter_size = 1;
 
 void SigHandle(int sig)
 {
@@ -339,6 +344,9 @@ void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg)
     s_plot11[scan_count] = omp_get_wtime() - preprocess_start_time;
     mtx_buffer.unlock();
     sig_buffer.notify_all();
+
+    // Changed by cxw
+    sub_lidar_time = ros::Time::now();
 }
 
 void imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in) 
@@ -371,6 +379,9 @@ void imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in)
     imu_buffer.push_back(msg);
     mtx_buffer.unlock();
     sig_buffer.notify_all();
+
+    // Changed by cxw
+    sub_imu_time = ros::Time::now();
 }
 
 double lidar_mean_scantime = 0.0;
@@ -759,32 +770,69 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
     solve_time += omp_get_wtime() - solve_start_;
 }
 
-bool flag = true;
-void timer_cbk(const ros::TimerEvent&)
+void timer_cbk(const ros::TimerEvent &)
 {
-    if (flag)
-    {
-        std::cout << "Hello from timer thread " << boost::this_thread::get_id() << std::endl;
-        flag = false;
-    }
+
+    ros::Time cur_time = ros::Time::now();
+    if ((cur_time - sub_imu_time > ros::Duration(0.05)) || (cur_time - sub_lidar_time > ros::Duration(0.5)))
+        return;
 
     if (kf_flag)
     {
         p_imu->Process_Imu_Real(RealImu, kf_real);
-        pubOdomFromImu.publish(p_imu->get_odomFromImu());
+        odom_vec.push_back(p_imu->get_odomFromImu());
+
+        if (odom_vec.size() > filter_size)
+            odom_vec.erase(odom_vec.begin());
+
+        nav_msgs::Odometry filter_odom;
+        filter_odom.header.frame_id = "world";
+        filter_odom.header.stamp = ros::Time::now();
+        for (int i = 0; i < odom_vec.size(); i++)
+        {
+            filter_odom.pose.pose.position.x += odom_vec[i].pose.pose.position.x;
+            filter_odom.pose.pose.position.y += odom_vec[i].pose.pose.position.y;
+            filter_odom.pose.pose.position.z += odom_vec[i].pose.pose.position.z;
+            filter_odom.pose.pose.orientation.x += odom_vec[i].pose.pose.orientation.x;
+            filter_odom.pose.pose.orientation.y += odom_vec[i].pose.pose.orientation.y;
+            filter_odom.pose.pose.orientation.z += odom_vec[i].pose.pose.orientation.z;
+            filter_odom.pose.pose.orientation.w += odom_vec[i].pose.pose.orientation.w;
+            filter_odom.twist.twist.linear.x += odom_vec[i].twist.twist.linear.x;
+            filter_odom.twist.twist.linear.y += odom_vec[i].twist.twist.linear.y;
+            filter_odom.twist.twist.linear.z += odom_vec[i].twist.twist.linear.z;
+        }
+        filter_odom.pose.pose.position.x /= odom_vec.size();
+        filter_odom.pose.pose.position.y /= odom_vec.size();
+        filter_odom.pose.pose.position.z /= odom_vec.size();
+        filter_odom.pose.pose.orientation.x /= odom_vec.size();
+        filter_odom.pose.pose.orientation.y /= odom_vec.size();
+        filter_odom.pose.pose.orientation.z /= odom_vec.size();
+        filter_odom.pose.pose.orientation.w /= odom_vec.size();
+        filter_odom.twist.twist.linear.x /= odom_vec.size();
+        filter_odom.twist.twist.linear.y /= odom_vec.size();
+        filter_odom.twist.twist.linear.z /= odom_vec.size();
+
+        pubOdomFromImu.publish(filter_odom);
+
+        geometry_msgs::PoseStamped vision_pose;
+        vision_pose.header = filter_odom.header;
+        vision_pose.pose = filter_odom.pose.pose;
+        pubVisionOdom.publish(vision_pose);
+
     }
 }
 
 void timerThread(ros::NodeHandle& nh)
 {
     pubOdomFromImu = nh.advertise<nav_msgs::Odometry> ("/Odometry_imu", 100000);
-    ros::Timer timer = nh.createTimer(ros::Duration(0.005), timer_cbk);
+    pubVisionOdom = nh.advertise<geometry_msgs::PoseStamped> ("/mavros/vision_pose/pose", 100000);
+    ros::Timer timer = nh.createTimer(ros::Duration(0.01), timer_cbk);
     ros::CallbackQueue timer_queue;
     nh.setCallbackQueue(&timer_queue);
 
     while (ros::ok())
     {
-        timer_queue.callAvailable(ros::WallDuration(0.005));
+        timer_queue.callAvailable(ros::WallDuration(0.01));
     }
 }
 
@@ -811,6 +859,9 @@ void runThread(ros::NodeHandle& nh)
     nh.param<double>("mapping/b_gyr_cov",b_gyr_cov,0.0001);
     nh.param<double>("mapping/b_acc_cov",b_acc_cov,0.0001);
     nh.param<double>("preprocess/blind", p_pre->blind, 0.01);
+    nh.param<double>("preprocess/box_x", p_pre->box_x, 0.01);
+    nh.param<double>("preprocess/box_y", p_pre->box_y, 0.01);
+    nh.param<double>("preprocess/box_z", p_pre->box_z, 0.01);
     nh.param<int>("preprocess/lidar_type", p_pre->lidar_type, AVIA);
     nh.param<int>("preprocess/scan_line", p_pre->N_SCANS, 16);
     nh.param<int>("preprocess/timestamp_unit", p_pre->time_unit, US);
