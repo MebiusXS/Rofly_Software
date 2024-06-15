@@ -7,6 +7,7 @@
 #include <deque>
 #include <fstream>
 #include <cmath>
+#include <vector>
 
 #include <ros/ros.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -48,15 +49,15 @@ double x = 0;
 double y = 0;
 double z = 0;
 
-Eigen::Vector3d euler(0, 0, 0);
 Eigen::Vector3d marker_pose(0,0,0);
+
+Eigen::Vector3d euler(0, 0, 0);
 
 ros::Subscriber sub_point_cloud_;
 ros::Subscriber sub_odom_boxMapping;
 ros::Subscriber sub_ladar_map_feats;
-ros::Publisher  odom_pub;
+ros::Publisher odom_pub;
 ros::Subscriber sub_marker;
-
 // 将box的点云发出来
 ros::Publisher pub_filtered_points_;
 ros::Publisher pub_box_image;
@@ -139,8 +140,8 @@ PointCloudT::Ptr point_box_clipping_opt(pcl::PointCloud<pcl::PointXYZI>::Ptr &in
     // 依次裁剪，z,y,x
     pass.setInputCloud(in_cloud);
     pass.setFilterFieldName("z");
-    // pass.setFilterLimits(z - length_z_clipped * 0.5, z + length_z_clipped * 0.5);
-    pass.setFilterLimits(0, 0.3);
+    pass.setFilterLimits(z - length_z_clipped * 0.5, z + length_z_clipped * 0.5);
+    // pass.setFilterLimits(0, 0.3);
     pass.filter(*current_ptr);
 
     pass.setInputCloud(current_ptr);
@@ -205,7 +206,7 @@ void draw_agent(cv::Mat &image, cv::Point &point) {
 
 /// @brief 根据自身的yaw角度改变agent的梭形的角度，也就是yaw角
 /// @param image 投影的图像
-/// @param yaw 
+/// @param yaw
 /// @param center pose的位置
 /// @param vertices 图标的四个点
 double yaw_body = 0;
@@ -248,6 +249,7 @@ void point_yaw(double yaw_radians, const cv::Point2f &center, cv::Point2f &point
     point_rotation.y = rotatedY;
 }
 
+// std::vector<float> marker{1,2,3};
 void pub_image(ros::Publisher &pub_box_image) {
     if (filtered_box_accMap == nullptr && filtered_box_accWindow == nullptr) {
         return;
@@ -287,16 +289,12 @@ void pub_image(ros::Publisher &pub_box_image) {
         } else {
             // 在图像上绘制点
             cv::circle(image, cv::Point(v, u), lidar_obstacle_radius, cv::Scalar(0, 0, 255), cv::FILLED);
+
         }
     }
-
-    // Marker pose:
     int marker_u = static_cast<int>((marker_pose[0] - x_0) * scale_x);
     int marker_v = static_cast<int>((marker_pose[1] - y_0) * scale_y);
-    cv::Point2f marker_uv_origin(marker_u, marker_v);
-    point_yaw(-yaw_body, center, marker_uv_origin);
-    cv::circle(image, cv::Point(marker_uv_origin.y, marker_uv_origin.x), 12.0, cv::Scalar(0, 255, 0), cv::FILLED);
-    
+    cv::circle(image, cv::Point(marker_v, marker_u), lidar_obstacle_radius, cv::Scalar(0, 0, 255), cv::FILLED);
     if (!isRotationLidarPoint_inbox) {
         // 将弧度制转换为角度制
         cv::Point2f point1(IMG_HEIGHT * 0.5, IMG_WIDTH * 0.5);
@@ -329,12 +327,7 @@ void pub_image(ros::Publisher &pub_box_image) {
     }
     pub_box_image.publish(msg);
 }
-void call_get_marker(const visualization_msgs::Marker::ConstPtr& msg){
-    marker_pose[0] = msg->pose.position.x;
-    marker_pose[1] = msg->pose.position.y;
-    marker_pose[2] = msg->pose.position.z;
-    // ROS_WARN("marker_pose = %.2f, %.2f, %.2f",marker_pose[0], marker_pose[1], marker_pose[2]);
-}
+
 void call_get_odom(const nav_msgs::Odometry::ConstPtr &msg) {
     x = msg->pose.pose.position.x;
     y = msg->pose.pose.position.y;
@@ -363,6 +356,12 @@ void call_get_odom(const nav_msgs::Odometry::ConstPtr &msg) {
     odom_pub.publish(new_odom);
 }
 
+void call_get_marker(const visualization_msgs::Marker::ConstPtr& msg){
+    marker_pose[0] = msg->pose.position.x;
+    marker_pose[1] = msg->pose.position.y;
+    marker_pose[2] = msg->pose.position.z;
+    ROS_INFO("Marker Pose - Position: x=%.2f, y=%.2f, z=%.2f",  marker_pose[0],  marker_pose[1],  marker_pose[2]);
+}
 // 滑动窗口的大小
 std::deque<sensor_msgs::PointCloud2::ConstPtr> window_buffer;
 size_t max_window_size = 50;
@@ -371,7 +370,6 @@ size_t max_window_size = 50;
  * @param msg：订阅一帧的点云，进行滑动窗口积累数据，对应的点云大小可控
  */
 void call_point_slidingwindow_Cloud(const sensor_msgs::PointCloud2::ConstPtr &msg) {
-    // 添加点云数据到滑动窗口缓冲区
     window_buffer.push_back(msg);
     // 如果滑动窗口大小超过最大限制，则移除最旧的数据
     if (window_buffer.size() > max_window_size) {
@@ -397,7 +395,6 @@ void pub_window_box(ros::Publisher &window_pub) {
     if (window_buffer.size() >= 50) {
         sensor_msgs::PointCloud2 accumulated_msg;
         pcl::toROSMsg(*box_window_accWindow, accumulated_msg);
-        
         if (!isDenseBox) {
             accumulated_msg.header = pub_point_accMap.header;
         } else {
@@ -423,7 +420,7 @@ int main(int argc, char **argv) {
     sub_ladar_map_feats = nh.subscribe("/Laser_ACCmap", 100000, &call_point_box_clipping);
     // sub_ladar_map_feats = nh.subscribe("/cloud_registered", 100000, &call_point_box_clipping);
     sub_odom_boxMapping = nh.subscribe("/Odometry", 100000, &call_get_odom);
-    sub_marker = nh.subscribe("/preview_goal_marker", 10, &call_get_marker);
+    sub_marker = nh.subscribe<visualization_msgs::Marker>("/preview_goal_marker",10,&call_get_marker);
     odom_pub = nh.advertise<nav_msgs::Odometry>("/new_odom", 100000);
 
     pub_filtered_points_ = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points", 100000);
@@ -431,9 +428,10 @@ int main(int argc, char **argv) {
 
     ros::Subscriber point_cloud_sub = nh.subscribe("/cloud_registered", 100000, &call_point_slidingwindow_Cloud);
     ros::Publisher window_pub = nh.advertise<sensor_msgs::PointCloud2>("/sliding_window", 100000);
-    std::ofstream outputFile("/home/pf/ws_livox/src/FAST_LIO/pf_output.csv");// 用于调试输出
 
-    ros::Rate rate(5000);// 设置ROS程序主循环每次运行的时间至少为0.0002秒（5000Hz）
+    // std::ofstream outputFile("/home/pf/ws_livox/src/FAST_LIO/pf_output.csv");// 用于调试输出
+
+    ros::Rate rate(10);// 设置ROS程序主循环每次运行的时间至少为0.0002秒（5000Hz）
     bool status = ros::ok();
     while (status) {
         ros::spinOnce();
