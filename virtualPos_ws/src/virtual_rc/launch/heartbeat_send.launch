@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="virtual_pos" type="heartbeat_send" name="heartbeat_send" output="screen" args="">
+    <rosparam file="$(find virtual_pos)/parameters/heartbeat.yaml"/>
+  </node>
+</launch>

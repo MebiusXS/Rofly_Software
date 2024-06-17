@@ -79,26 +79,32 @@ void rcInCallback(const mavros_msgs::RCIn::ConstPtr& msg)
             goal.goal[1] = current_odom_position.y;
             goal.goal[2] = current_odom_position.z;
         }
-            // tf2::Quaternion quat;
-            // tf2::convert(current_orientation, quat);
-            // tf2::Matrix3x3 m(quat);
-            // double roll, pitch, yaw;
-            // m.getRPY(roll, pitch, yaw);//提取欧拉角
-            double delta_x = 0.0, delta_y = 0.0, delta_z = 0.0;
+        // tf2::Quaternion quat;
+        // tf2::convert(current_orientation, quat);
+        // tf2::Matrix3x3 m(quat);
+        // double roll, pitch, yaw;
+        // m.getRPY(roll, pitch, yaw);//提取欧拉角
+        double delta_x = 0.0, delta_y = 0.0, delta_z = 0.0;
 
-            delta_x -= getStep(chan_fb);
-            delta_y -= getStep(chan_lr);
-            delta_z += getStep(chan_ud);
+        delta_x -= getStep(chan_fb);
+        delta_y -= getStep(chan_lr);
+        delta_z += getStep(chan_ud);
 
-            // double global_x = delta_x * cos(yaw) - delta_y * sin(yaw);
-            // double global_y = delta_x * sin(yaw) + delta_y * cos(yaw);
-            // double global_z = delta_z;
-            // goal.goal[0] += global_x;
-            // goal.goal[1] += global_y;
-            // goal.goal[2] += global_z;
-            goal.goal[0] += delta_x;
-            goal.goal[1] += delta_y;
-            goal.goal[2] += delta_z;
+        // double global_x = delta_x * cos(yaw) - delta_y * sin(yaw);
+        // double global_y = delta_x * sin(yaw) + delta_y * cos(yaw);
+        // double global_z = delta_z;
+        // goal.goal[0] += global_x;
+        // goal.goal[1] += global_y;
+        // goal.goal[2] += global_z;
+        goal.goal[0] += delta_x;
+        goal.goal[1] += delta_y;
+        goal.goal[2] += delta_z;
+
+        geometry_msgs::Point cur_tar_pt;
+        cur_tar_pt.x = goal.goal[0];
+        cur_tar_pt.y = goal.goal[1];
+        cur_tar_pt.z = goal.goal[2];
+        cur_tar_pub.publish(cur_tar_pt);
 
     }
     else first_flag = true;
@@ -133,14 +139,8 @@ bool achieveJudge()
 void timerCallback(const ros::TimerEvent& e)
 {
     goal.drone_id = 0;
-    if(current_state.mode == "GUIDED" && !first_flag && !achieveJudge()) {
+    if(current_state.mode == "GUIDED" && !first_flag && !achieveJudge() && current_state.armed) {
         pub.publish(goal);
-
-        geometry_msgs::Point cur_tar_pt;
-        cur_tar_pt.x = goal.goal[0];
-        cur_tar_pt.y = goal.goal[1];
-        cur_tar_pt.z = goal.goal[2];
-        cur_tar_pub.publish(cur_tar_pt);
     }
 }
 

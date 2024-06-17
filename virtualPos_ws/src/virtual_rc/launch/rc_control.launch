@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="virtual_pos" type="rc_control" name="rc_control" output="screen" args="">
+    <rosparam file="$(find virtual_pos)/parameters/rc_control.yaml"/>
+  </node>
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="virtual_pos" type="wifiquality_pub" name="wifiquality_pub" output="screen" args="">
+    <rosparam file="$(find virtual_pos)/parameters/wifi_quality.yaml"/>
+  </node>
+</launch>

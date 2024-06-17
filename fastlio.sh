@@ -7,14 +7,16 @@ source ~/cam_ws/devel/setup.bash
 roslaunch usb_cam usb_cam.launch & sleep 1;
 
 source ~/rocon_ws/devel/setup.bash
-roslaunch rocon_rtsp_camera_relay rtsp_camera_relay.launch & sleep 1;
+# roslaunch rocon_rtsp_camera_relay rtsp_camera_relay.launch & sleep 1;
 
 source ~/fast_lio_rofly/devel/setup.bash
 roslaunch fast_lio mapping_mid360.launch & sleep 2;
-roslaunch odom_frequency_conversion odom_frequency_conversion.launch & sleep 2;
 roslaunch rviz_text rviz_text.launch & sleep 2;
 roslaunch system_monitor system_monitor.launch & sleep 2;
 roslaunch fast_lio rviz.launch & sleep 1;
+
+source /home/fast/odom_frame/devel/setup.bash
+roslaunch odom_frequency_conversion odom_frequency_conversion.launch & sleep 2;
 
 # rosrun rqt_reconfigure rqt_reconfigure & sleep 1;
 

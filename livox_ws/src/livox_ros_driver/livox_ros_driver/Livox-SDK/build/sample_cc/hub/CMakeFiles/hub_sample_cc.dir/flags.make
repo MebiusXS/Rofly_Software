@@ -6,5 +6,5 @@ CXX_FLAGS =  -pthread   -std=gnu++11
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/fast/Downloads/code/Rofly_Software/Onboard_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include -I/home/fast/Downloads/code/Rofly_Software/Onboard_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include/third_party/FastCRC -I/home/fast/Downloads/code/Rofly_Software/Onboard_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include/third_party/spdlog -I/home/fast/Downloads/code/Rofly_Software/Onboard_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include/third_party/cmdline 
+CXX_INCLUDES = -I/home/fast/Downloads/code/rofly_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include -I/home/fast/Downloads/code/rofly_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include/third_party/FastCRC -I/home/fast/Downloads/code/rofly_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include/third_party/spdlog -I/home/fast/Downloads/code/rofly_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sdk_core/include/third_party/cmdline 
 

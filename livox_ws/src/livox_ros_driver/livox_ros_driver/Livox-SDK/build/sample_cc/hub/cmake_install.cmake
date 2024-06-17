@@ -1,4 +1,4 @@
-# Install script for directory: /home/fast/Downloads/code/Rofly_Software/Onboard_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sample_cc/hub
+# Install script for directory: /home/fast/Downloads/code/rofly_codes/livox_ws/src/livox_ros_driver/livox_ros_driver/Livox-SDK/sample_cc/hub
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

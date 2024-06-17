@@ -1,7 +1,7 @@
 <launch>
 
-    <arg name="map_size_x" default="100.0"/>
-    <arg name="map_size_y" default="100.0"/>
+    <arg name="map_size_x" default="200.0"/>
+    <arg name="map_size_y" default="200.0"/>
     <arg name="map_size_z" default="10.0"/>
 
 
@@ -22,7 +22,7 @@
         <param name="grid_map/map_size_z"   value="$(arg map_size_z)" /> 
         <param name="grid_map/local_update_range_x"  value="8.5" /> 
         <param name="grid_map/local_update_range_y"  value="8.5" /> 
-        <param name="grid_map/local_update_range_z"  value="3.0" /> 
+        <param name="grid_map/local_update_range_z"  value="5.0" /> 
         
         <!-- 0.2 -->
         <param name="grid_map/obstacles_inflation"     value="0.28" /> 

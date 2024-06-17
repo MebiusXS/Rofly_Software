@@ -6,6 +6,7 @@ ego_sh="/home/fast/ego.sh"
 bag_sh="/home/fast/bag.sh"
 posctrl_sh="/home/fast/posctrl.sh"
 fastlio_sh="/home/fast/fastlio.sh"
+display_sh="/home/fast/display.sh"
 
 # mavros
 sleep 1
@@ -19,12 +20,15 @@ xdotool type $expect_sh
 xdotool key Return
 sleep 3
 
-# pointcloud visualization
+# pointcloud visualization || display
 xdotool key Alt+Left
 sleep 1
 xdotool key Shift+Ctrl+O
+# sleep 1
+# xdotool type $pcviz_sh
+# xdotool key Return
 sleep 1
-xdotool type $pcviz_sh
+xdotool type $display_sh
 xdotool key Return
 sleep 1
 
@@ -32,9 +36,9 @@ sleep 1
 xdotool key Alt+Right
 sleep 1
 xdotool key Shift+Ctrl+O
-sleep 1
-xdotool type $kcon_sh
-xdotool key Return
+# sleep 1
+# xdotool type $kcon_sh
+# xdotool key Return
 sleep 1
 
 # goal_ctrl ego

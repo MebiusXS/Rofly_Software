@@ -1,12 +1,12 @@
 {
     "python.autoComplete.extraPaths": [
-        "/home/fast/fast_lio_rofly_ori/devel/lib/python3/dist-packages",
-        "/home/fast/livox_ws/devel/lib/python3/dist-packages",
+        "/home/fast/Downloads/code/rofly_codes/fast_lio_rofly/devel/lib/python3/dist-packages",
+        "/home/fast/Downloads/code/rofly_codes/livox_ws/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
     ],
     "python.analysis.extraPaths": [
-        "/home/fast/fast_lio_rofly_ori/devel/lib/python3/dist-packages",
-        "/home/fast/livox_ws/devel/lib/python3/dist-packages",
+        "/home/fast/Downloads/code/rofly_codes/fast_lio_rofly/devel/lib/python3/dist-packages",
+        "/home/fast/Downloads/code/rofly_codes/livox_ws/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
     ]
 }

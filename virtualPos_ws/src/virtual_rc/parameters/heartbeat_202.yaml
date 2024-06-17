@@ -1,0 +1,5 @@
+loop_rate: 50
+target_ip: 192.168.5.202
+
+land_timeout: 3.0
+hover_timeout: 1.0

@@ -816,8 +816,8 @@ void GridMap::publishMap()
 
         Eigen::Vector3d pos;
         indexToPos(Eigen::Vector3i(x, y, z), pos);
-        if (pos(2) > mp_.visualization_truncate_height_)
-          continue;
+        // if (pos(2) > mp_.visualization_truncate_height_)
+        //   continue;
 
         pt.x = pos(0);
         pt.y = pos(1);
@@ -866,8 +866,8 @@ void GridMap::publishMapInflate(bool all_info)
 
         Eigen::Vector3d pos;
         indexToPos(Eigen::Vector3i(x, y, z), pos);
-        if (pos(2) > mp_.visualization_truncate_height_)
-          continue;
+        // if (pos(2) > mp_.visualization_truncate_height_)
+        //   continue;
 
         pt.x = pos(0);
         pt.y = pos(1);
@@ -884,6 +884,7 @@ void GridMap::publishMapInflate(bool all_info)
   //       pt.z = z;
   //       cloud.push_back(pt);
   //     }
+  
   cloud.width = cloud.points.size();
   cloud.height = 1;
   cloud.is_dense = true;

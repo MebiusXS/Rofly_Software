@@ -259,7 +259,7 @@ inline int GridMap::setCacheOccupancy(Eigen::Vector3d pos, int occ)
 
 inline void GridMap::changeInfBuf(const bool dir, const int inf_buf_idx, const Eigen::Vector3i global_idx)
 {
-  const int Z_INFLATE = ceil((0.1 - 1e-5) / mp_.resolution_);
+  // const int Z_INFLATE = ceil((0.1 - 1e-5) / mp_.resolution_);
 
   int inf_grid = mp_.inf_grid_;
   if (dir)
@@ -269,7 +269,7 @@ inline void GridMap::changeInfBuf(const bool dir, const int inf_buf_idx, const E
 
   for (int x_inf = -inf_grid; x_inf <= inf_grid; ++x_inf)
     for (int y_inf = -inf_grid; y_inf <= inf_grid; ++y_inf)
-      for (int z_inf = -Z_INFLATE; z_inf <= Z_INFLATE; ++z_inf)
+      for (int z_inf = -inf_grid; z_inf <= inf_grid; ++z_inf)
       {
         Eigen::Vector3i id_inf(global_idx + Eigen::Vector3i(x_inf, y_inf, z_inf));
 #if GRID_MAP_NEW_PLATFORM_TEST

@@ -1,0 +1,6 @@
+move_x: 0.1
+move_y: 0.1
+move_z: 0.1
+move_yaw: 10.0
+
+request_duration: 1.0

@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="virtual_pos" type="mix_control" name="mix_control" output="screen" args="">
+    <rosparam file="$(find virtual_pos)/parameters/mix_control.yaml"/>
+  </node>
+</launch>
