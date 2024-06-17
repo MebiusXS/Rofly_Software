@@ -9,9 +9,10 @@
 #include <thread>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
 int pubFrameRate = 200;
 ros::Publisher interpolated_pub,sleep_pub1,sleep_pub2;
-ros::Publisher  visionpose_pub;
+ros::Publisher  visionpose_pub, visionspeed_pub;
 bool isInitialized = false;
 bool odom_tag = false;
 std::vector<Eigen::Quaterniond> quaternionPoints;
@@ -25,6 +26,7 @@ std::queue<Eigen::Quaterniond> oriqueue;
 double odom_timestamp;
 nav_msgs::Odometry odom_prediction;
 geometry_msgs::PoseStamped vision_pose;
+geometry_msgs::TwistStamped vision_speed;
 std_msgs::Float64 sleep_msg1,sleep_msg2;
 Eigen::Vector3d previous_position;
 double previous_time;
@@ -194,8 +196,11 @@ void timer_cbk(const ros::TimerEvent &)
         sleep_pub2.publish(sleep_msg2);
         vision_pose.pose = odom_prediction.pose.pose;
         vision_pose.header = odom_prediction.header;
+        vision_speed.header = odom_prediction.header;
+        vision_speed.twist = odom_prediction.twist.twist;
         interpolated_pub.publish(odom_prediction);
         visionpose_pub.publish(vision_pose);
+        visionspeed_pub.publish(vision_speed);
         
     }
 }
@@ -210,6 +215,8 @@ int main(int argc, char **argv) {
             ("/Odometry", 10000, odometryCallback, ros::TransportHints().tcpNoDelay());
     visionpose_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("/mavros/vision_pose/pose", 10000);
+    visionspeed_pub = nh.advertise<geometry_msgs::TwistStamped>
+            ("/mavros/vision_speed/speed_twist", 10000);
     interpolated_pub = nh.advertise<nav_msgs::Odometry>
             ("/Odometry_imu", 10000);
     sleep_pub1 = nh.advertise<std_msgs::Float64>("/sleep_time1", 10000);
