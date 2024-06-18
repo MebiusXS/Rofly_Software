@@ -10,7 +10,8 @@
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-int pubFrameRate = 200;
+// int pubFrameRate = 200;
+int odom_freq = 200;
 ros::Publisher interpolated_pub,sleep_pub1,sleep_pub2;
 // ros::Publisher  visionpose_pub, visionspeed_pub;
 ros::Publisher  visionpose_pub;
@@ -109,7 +110,7 @@ void timer_cbk(const ros::TimerEvent &)
 {
     if (posqueue.size()==windowSize) {
         time_1 = ros::Time::now().toSec();
-        int numInterpolatedPoints = 200;
+        // int numInterpolatedPoints = 200;
         
         //double previous_time;
         auto dt = ros::Time::now().toSec() - odom_timestamp;
@@ -211,6 +212,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "odom_node");
     ros::NodeHandle nh;
 
+    nh.param("/odom_frequency_conversion/frequency", odom_freq, 200);
 
     bool imu = false;
     ros::Subscriber sub = nh.subscribe<nav_msgs::Odometry>
@@ -231,7 +233,7 @@ int main(int argc, char **argv) {
     
     //std::thread publishThread(publishInterpolatedOdometry);
 
-    ros::Timer timer = nh.createTimer(ros::Duration(0.005), timer_cbk);
+    ros::Timer timer = nh.createTimer(ros::Duration(1.0/odom_freq), timer_cbk);
 
     // ros::Rate rate(pubFrameRate);
     

@@ -1,5 +1,6 @@
 <launch>
   <node pkg="odom_frequency_conversion" type="odom_frequency_conversion" name="odom_frequency_conversion" output="screen">
     <!-- <param name="imu" type="bool" value="true" /> -->
+    <param name="frequency" type="int" value="200"/>
   </node>
 </launch>  
